@@ -10,7 +10,7 @@ print('Test accuracy:', score[1])
 
 # The predict_classes function outputs the highest probability class
 # according to the trained classifier for each input example.
-predicted_classes = model.predict_classes(X_test)
+predicted_classes = model.predict(X_test)
 # Check which items we got right / wrong
 correct_indices = np.nonzero(predicted_classes == y_test)[0]
 incorrect_indices = np.nonzero(predicted_classes != y_test)[0]
