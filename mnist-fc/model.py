@@ -1,5 +1,7 @@
 from keras.models import Sequential  
-from keras.layers.core import Dense, Dropout, Activation 
+from keras.layers.core import Dense, Dropout, Activation
+
+print("Mnist_Model")
 def FC_model():
   model = Sequential()
   model.add(Dense(512, input_shape=(784,)))
