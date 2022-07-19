@@ -11,8 +11,8 @@ from keras.models import model_from_json
 
 # Arguments for the training
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('dataset', default='\\wsl$\\Ubuntu\\home\\shaheera\\mnist-fc\\dataset\\MNIST\\mnist.npz', help="MNIST dataset")
-#parser.add_argument('configuration', default='\\wsl$\\Ubuntu\\home\\shaheera\\mnist-fc\\base_config.json', help="Configuration")
+parser.add_argument('dataset', default='dataset\\MNIST\\mnist.npz', help="MNIST dataset")
+#parser.add_argument('configuration', default='base_config.json', help="Configuration")
 args = parser.parse_args()
 
 (X_train, y_train), (X_test, y_test) = mnist.load_data(args.dataset)
