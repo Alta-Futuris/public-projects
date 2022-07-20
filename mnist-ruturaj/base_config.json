@@ -1,0 +1,29 @@
+{
+    "Model_config": [
+        {
+            "Layer_idx" : 0,
+            "Layer_name" : "Linear_1",
+            "Num_inputs" : 784,
+            "Num_outputs" : 32,
+            "Activation" : "Relu",
+            "Bias" : false,
+            "Dropout" : false
+        },
+        {
+            "Layer_idx" : 0,
+            "Layer_name" : "Linear_1",
+            "Num_inputs" : 32,
+            "Num_outputs" : 10,
+            "Activation" : "Relu",
+            "Bias" : false,
+            "Dropout" : false 
+        }
+    ],
+
+    "Hyperparameters" : {
+            "Optimizer" : "SGD",
+            "Learning_rate" : 0.05,
+            "No_of_epochs" : 5,
+            "Batch_size" : 128
+    }
+}
