@@ -10,11 +10,11 @@
             "Dropout" : false
         },
         {
-            "Layer_idx" : 0,
+            "Layer_idx" : 1,
             "Layer_name" : "Linear_1",
             "Num_inputs" : 32,
             "Num_outputs" : 10,
-            "Activation" : "Relu",
+            "Activation" : "Sigmoid",
             "Bias" : false,
             "Dropout" : false 
         }
@@ -22,8 +22,9 @@
 
     "Hyperparameters" : {
             "Optimizer" : "SGD",
-            "Learning_rate" : 0.05,
-            "No_of_epochs" : 5,
-            "Batch_size" : 128
+            "Learning_rate" : 0.5,
+            "No_of_epochs" : 25,
+            "Batch_size" : 128,
+            "loss_fun" : "cross_entropy"
     }
 }

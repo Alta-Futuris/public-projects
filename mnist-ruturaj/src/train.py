@@ -9,6 +9,10 @@ from Dataclasses.hyperpar import Hyperparameters
 from modelparser import ModelParser
 from model import ModelParser
 from model import MnistModel
+import mlflow.pytorch
+import wandb
+import neptune.new as neptune
+
 
 # dataset = MNIST(root = 'data/', train = True, download = True)
 # test_dataset = MNIST(root = 'data/', train = False)
@@ -16,7 +20,7 @@ from model import MnistModel
 def preprocess(batch_size):
     # Converting data into tensor
     dataset = MNIST(root = 'data/', train = True, download = True, transform = transforms.ToTensor() )
-
+   
     # Splitting the data into training and validation sets
     train_data, val_data = random_split(dataset, [50000, 10000])
 
@@ -25,6 +29,7 @@ def preprocess(batch_size):
     train_loader = DataLoader(train_data,batch_size, shuffle = True)
     # Shuffle set to true to get different batch of data every epoch
     val_loader = DataLoader(val_data, batch_size)
+    # In every batch will have image of shape(batchsize, channnel, height, widht) and label of shape(batchsize)
 
     return train_loader,val_loader
 
@@ -34,12 +39,15 @@ def accuracy(pred, labels):
     return acc
 
 
-def fit(epochs, lr, train_loader, val_loader):
+def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
     
     # Defining loss function
-    loss_fn = torch.nn.functional.cross_entropy
+    if loss_fn in "cross_entropy":
+        loss_fn = torch.nn.functional.cross_entropy
 
-    opt = torch.optim.SGD(model.parameters(), lr)
+    # if opt in "SGD":
+    #     opt = torch.optim.SGD(model.parameters(), lr)
+
     dl = []
     da = []
 
@@ -51,7 +59,7 @@ def fit(epochs, lr, train_loader, val_loader):
         for image, labels in train_loader:
             pred = model(image.reshape(-1,784))
             # loss calculation
-            loss = loss_fn(pred, labels)
+            loss = loss_fn(pred, labels) # Passing pred of shape (batchsize, no.of classes) and labels of shape(btachsize)
             # Gradient calculation
             loss.backward()
             # Weight adjusting
@@ -65,8 +73,8 @@ def fit(epochs, lr, train_loader, val_loader):
             # loss calculation
             loss = loss_fn(pred, labels)
             # accuracy calulation
-            _, pred = torch.max(pred, dim = 1)
-            acc = (torch.sum(pred == labels).item()/len(pred))
+            _, pred = torch.max(pred, dim = 1) # Gives two output first is value and second is index
+            acc = (torch.sum(pred == labels).item()/len(pred)) # Pred shape(batchsize) and labels shape(batchsize)
 
             l.append(loss)
             a.append(acc)
@@ -80,23 +88,59 @@ def fit(epochs, lr, train_loader, val_loader):
 #         print(dl)
         print('Accuracy of epoch {}, is {}'.format((epoch + 1),  sum(a)/len(a)))
         print('Loss of epoch {}, is {}'.format((epoch + 1), sum(l)/len(l) ))
-    return da,dl
+        run["Val/accu"].log(sum(a)/len(a))
+        run["Val/loss"].log(sum(l)/len(l))
+
+    return dl
 
 
 if __name__ == "__main__":
+
     parser = ModelParser("../base_config.json")
     layers = parser.get_list()
-    hp = parser.get_hp()
+    kwargs = parser.get_hp()[0]
     model = MnistModel(layers)
     model = model.build_model()
-    for i in hp:
-        kwargs = i
     Hyperparameters(**kwargs)
+
+    # Assigning hyperparametres
     batch_size = Hyperparameters.batch_size
     epochs = Hyperparameters.epochs
     lr = Hyperparameters.lr
     opt = Hyperparameters.opt
+    optm = torch.optim.SGD(model.parameters(), lr)
+    loss_fn = Hyperparameters.loss_fn
+
+    # Preprocessing
     train_loader,val_loader=preprocess(batch_size)
-    fit(epochs, lr, train_loader, val_loader)
+
+    # Neptune model and parametres tracking
+    run = neptune.init(
+    project="ruturaj.mane/MNIST",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI2ZDk2ZGRlZi1kN2MyLTRjNzItOTViMC1mMmNiZGI3NTU5OTAifQ==",
+    )  
+
+    params = {"learning_rate": lr, "Optimizer" : opt, "Batch_size" : batch_size, "Epochs" : epochs, "Loss_fn": loss_fn}
+    run["Parameters"] = params
+
+    loss = fit(epochs, lr, train_loader, val_loader, loss_fn, optm)
+
+    # # Log a model as a state_dict
+    # with mlflow.start_run():
+    #     state_dict = model.state_dict()
+    #     mlflow.pytorch.log_state_dict(state_dict, artifact_path="model")
+    
+    run.stop()
+
+
+    torch.save(model, '../Models/MNIST_{0}_{1}_{2}_{3}_{4}.pth'.format(batch_size,epochs,lr,opt,loss_fn))
+
+
+
+    
+ 
+    
+
+
 
     

@@ -7,6 +7,7 @@ class Hyperparameters:
         Hyperparameters.lr = hyp["Learning_rate"]
         Hyperparameters.epochs = hyp["No_of_epochs"]
         Hyperparameters.batch_size = hyp["Batch_size"]
+        Hyperparameters.loss_fn = hyp["loss_fun"]
 
     # @classmethod
     # def prop(cls):

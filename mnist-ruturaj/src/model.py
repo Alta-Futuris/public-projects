@@ -8,7 +8,6 @@ class MnistModel(torch.nn.Module):
     def __init__(self,layer_list):
         super().__init__()
         self.layer_list = layer_list
-        self.build_model()
 
     def _activation_mapper(self, act_string):
 
@@ -17,6 +16,9 @@ class MnistModel(torch.nn.Module):
         
         elif act_string == 'Sigmoid':
             return torch.nn.Sigmoid()
+        
+        else:
+            pass
 
     def build_model(self):
 
@@ -35,17 +37,16 @@ class MnistModel(torch.nn.Module):
             dpt = torch.nn.Dropout2d(layer.dropout) if layer.Dropout else None
             if dpt:
                 module_list.append(dpt)
-        
-        return torch.nn.Sequential(*module_list)
+
+            self.pred = torch.nn.Sequential(*module_list)
+        return self.pred
 
 
 if __name__ == "__main__":
     parser = ModelParser("../base_config.json")
     layers = parser.get_list()
-    hp = parser.get_hp()
+    kwargs = parser.get_hp()[0]
     model = MnistModel(layers)
-    for i in hp:
-        kwargs = i
     Hyperparameters(**kwargs)
 
     
