@@ -10,9 +10,8 @@ from modelparser import ModelParser
 from model import ModelParser
 from model import MnistModel
 import mlflow.pytorch
-import wandb
 import neptune.new as neptune
-
+from utils.common import accplt
 
 # dataset = MNIST(root = 'data/', train = True, download = True)
 # test_dataset = MNIST(root = 'data/', train = False)
@@ -56,6 +55,7 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
         l = []
         a = []
 
+        model.train()
         for image, labels in train_loader:
             pred = model(image.reshape(-1,784))
             # loss calculation
@@ -67,17 +67,18 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
             # Setting gradient to zero
             opt.zero_grad()
             
+        model.eval() # This disables the dropout and batch normalization as dropout is used for increasing bias (reduce overfitting)
+        with torch.no_grad(): # Turns off the gradient calculation false, which makes computation faster. 
+            for image, labels in val_loader:
+                pred = model(image.reshape(-1,784))
+                # loss calculation
+                loss = loss_fn(pred, labels)
+                # accuracy calulation
+                _, pred = torch.max(pred, dim = 1) # Gives two output first is value and second is index
+                acc = (torch.sum(pred == labels).item()/len(pred)) # Pred shape(batchsize) and labels shape(batchsize)
 
-        for image, labels in val_loader:
-            pred = model(image.reshape(-1,784))
-            # loss calculation
-            loss = loss_fn(pred, labels)
-            # accuracy calulation
-            _, pred = torch.max(pred, dim = 1) # Gives two output first is value and second is index
-            acc = (torch.sum(pred == labels).item()/len(pred)) # Pred shape(batchsize) and labels shape(batchsize)
-
-            l.append(loss)
-            a.append(acc)
+                l.append(loss)
+                a.append(acc)
 
 
         dl.append(sum(l)/len(l))
@@ -91,7 +92,7 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
         run["Val/accu"].log(sum(a)/len(a))
         run["Val/loss"].log(sum(l)/len(l))
 
-    return dl
+    return dl,da
 
 
 if __name__ == "__main__":
@@ -123,8 +124,9 @@ if __name__ == "__main__":
     params = {"learning_rate": lr, "Optimizer" : opt, "Batch_size" : batch_size, "Epochs" : epochs, "Loss_fn": loss_fn}
     run["Parameters"] = params
 
-    loss = fit(epochs, lr, train_loader, val_loader, loss_fn, optm)
+    dl, da = fit(epochs, lr, train_loader, val_loader, loss_fn, optm)
 
+    accplt(da)
     # # Log a model as a state_dict
     # with mlflow.start_run():
     #     state_dict = model.state_dict()
@@ -133,7 +135,8 @@ if __name__ == "__main__":
     run.stop()
 
 
-    torch.save(model, '../Models/MNIST_{0}_{1}_{2}_{3}_{4}.pth'.format(batch_size,epochs,lr,opt,loss_fn))
+    torch.save({'model_state': model.state_dict(), 'epochs':epochs, 
+    'Learning_rate':lr, 'Loss_fn':loss_fn, 'optmizer_state':optm.state_dict() }, '../Models/MNIST_{0}_{1}_{2}_{3}_{4}.pth'.format(batch_size,epochs,lr,opt,loss_fn))
 
 
 

@@ -23,7 +23,7 @@
     "Hyperparameters" : {
             "Optimizer" : "SGD",
             "Learning_rate" : 0.5,
-            "No_of_epochs" : 25,
+            "No_of_epochs" : 3,
             "Batch_size" : 128,
             "loss_fun" : "cross_entropy"
     }
