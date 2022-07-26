@@ -9,7 +9,6 @@ from Dataclasses.hyperpar import Hyperparameters
 from modelparser import ModelParser
 from model import ModelParser
 from model import MnistModel
-import mlflow.pytorch
 import neptune.new as neptune
 from utils.common import accplt
 
@@ -57,7 +56,8 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
 
         model.train()
         for image, labels in train_loader:
-            pred = model(image.reshape(-1,784))
+            # print(image.shape)
+            pred = model(image)
             # loss calculation
             loss = loss_fn(pred, labels) # Passing pred of shape (batchsize, no.of classes) and labels of shape(btachsize)
             # Gradient calculation
@@ -70,7 +70,7 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
         model.eval() # This disables the dropout and batch normalization as dropout is used for increasing bias (reduce overfitting)
         with torch.no_grad(): # Turns off the gradient calculation false, which makes computation faster. 
             for image, labels in val_loader:
-                pred = model(image.reshape(-1,784))
+                pred = model(image)
                 # loss calculation
                 loss = loss_fn(pred, labels)
                 # accuracy calulation
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     kwargs = parser.get_hp()[0]
     model = MnistModel(layers)
     model = model.build_model()
+ 
     Hyperparameters(**kwargs)
 
     # Assigning hyperparametres
@@ -109,7 +110,10 @@ if __name__ == "__main__":
     epochs = Hyperparameters.epochs
     lr = Hyperparameters.lr
     opt = Hyperparameters.opt
-    optm = torch.optim.SGD(model.parameters(), lr)
+    if opt == "Adam":
+        optm = torch.optim.Adam(model.parameters(), lr)
+    elif opt == "SGD":
+        optm = torch.optim.SGD(model.parameters(), lr)
     loss_fn = Hyperparameters.loss_fn
 
     # Preprocessing
@@ -119,7 +123,7 @@ if __name__ == "__main__":
     run = neptune.init(
     project="ruturaj.mane/MNIST",
     api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI2ZDk2ZGRlZi1kN2MyLTRjNzItOTViMC1mMmNiZGI3NTU5OTAifQ==",
-    )  
+    )
 
     params = {"learning_rate": lr, "Optimizer" : opt, "Batch_size" : batch_size, "Epochs" : epochs, "Loss_fn": loss_fn}
     run["Parameters"] = params

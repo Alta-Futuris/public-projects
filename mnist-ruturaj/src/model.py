@@ -11,7 +11,7 @@ class MnistModel(torch.nn.Module):
 
     def _activation_mapper(self, act_string):
 
-        if act_string == "Relu":
+        if act_string == "ReLU":
             return torch.nn.ReLU()
         
         elif act_string == 'Sigmoid':
@@ -27,18 +27,27 @@ class MnistModel(torch.nn.Module):
         for layer_ix, layer in enumerate(self.layer_list):
             
             if "Linear" in layer.Layer_name:
-                linear_layer = torch.nn.Linear(layer.Num_inputs, layer.Num_outputs, bias = layer.Bias)
-
-            module_list.append(linear_layer)
+                module_list.append(torch.nn.Flatten())
+                intilayer = torch.nn.Linear(layer.Num_inputs, layer.Num_outputs, bias = layer.Bias)
+            if "Conv" in layer.Layer_name:
+                intilayer = torch.nn.Conv2d(in_channels = layer.Num_inputs, out_channels = layer.Num_outputs, kernel_size = layer.kernel_size,
+                stride = layer.stride, padding = layer.padding, bias = False)
+            if "MaxPool2d" in layer.Layer_name:
+                intilayer = torch.nn.MaxPool2d(kernel_size = layer.kernel_size)
+            
+            module_list.append(intilayer)
 
             act = self._activation_mapper(layer.Activation)
-            module_list.append(act)
+            if act != None:
+                module_list.append(act)
 
-            dpt = torch.nn.Dropout2d(layer.dropout) if layer.Dropout else None
+            dpt = torch.nn.Dropout2d(layer.dropout) if layer.Dropout else False
             if dpt:
                 module_list.append(dpt)
 
-            self.pred = torch.nn.Sequential(*module_list)
+        print(module_list)
+        self.pred = torch.nn.Sequential(*module_list)
+
         return self.pred
 
 
@@ -47,6 +56,7 @@ if __name__ == "__main__":
     layers = parser.get_list()
     kwargs = parser.get_hp()[0]
     model = MnistModel(layers)
+    model = model.build_model()
     Hyperparameters(**kwargs)
 
     

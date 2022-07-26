@@ -18,7 +18,7 @@ class ModelParser:
 
         for layer_config in arch_dic["Model_config"]:
             Layer_obj = Layer(**layer_config)
-            Layer_obj.print_info()
+            # Layer_obj.print_info()
             self.layer_list.append(Layer_obj)
         
         self.hp.append(arch_dic["Hyperparameters"])

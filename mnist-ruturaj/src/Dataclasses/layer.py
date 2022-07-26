@@ -11,6 +11,9 @@ class Layer:
         self.Activation = kwargs["Activation"]
         self.Bias = kwargs["Bias"]
         self.Dropout = kwargs["Dropout"]
+        self.kernel_size = kwargs["kernel_size"]
+        self.stride = kwargs["stride"]
+        self.padding = kwargs["padding"]
 
     def print_info(self):
         print(self._attr_dict)
