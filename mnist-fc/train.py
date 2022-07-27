@@ -1,6 +1,7 @@
 import numpy as np                   
 import matplotlib.pyplot as plt      
-import random                        
+import random
+import keras
 from keras.datasets import mnist     
 from keras.utils import np_utils  
 #from model import FC_model
@@ -8,12 +9,17 @@ from utils.metrics import f1_score, precision, recall
 from mnist import MNIST
 import argparse
 from keras.models import model_from_json
+from logger1 import MyLogger
 
 # Arguments for the training
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--dataset', default='dataset\\MNIST\\mnist.npz', help="MNIST dataset")
+parser.add_argument('--dataset', default='\\wsl$\\Ubuntu\\home\\shaheera\\mnist-fc\\dataset\\MNIST\\mnist.npz', help="MNIST dataset")
 parser.add_argument('--config', default = 'base_config.json', type = str, action = 'store', help="Configuration file")
 args = parser.parse_args()
+
+batch_size = 128
+epochs = 5
+
 
 (X_train, y_train), (X_test, y_test) = mnist.load_data(args.dataset)
 print("Shapes of dataset")
@@ -44,11 +50,11 @@ json_file = open(filename,'r')
 loaded_model_json = json_file.read()
 json_file.close()
 model = model_from_json(loaded_model_json)
-#model = FC_model()
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy', f1_score, precision, recall])
-model.fit(X_train, Y_train,
-          batch_size=128, epochs=5,
-          verbose=1)
-model.save('models\mnist.h5')
-print(model.summary())
+
+#model = FC_model()
+
+mylogger = MyLogger(n=epochs)
+history = model.fit(X_train, Y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks = [mylogger, keras.callbacks.CSVLogger('mnistlogger.log')])
+model.save('models/mnist2.h5')
 
