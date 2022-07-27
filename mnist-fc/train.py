@@ -55,6 +55,6 @@ model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accur
 #model = FC_model()
 
 mylogger = MyLogger(n=epochs)
-history = model.fit(X_train, Y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks = [mylogger, keras.callbacks.CSVLogger('mnistlogger.log')])
+history = model.fit(X_train, Y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks = [mylogger, keras.callbacks.CSVLogger('logs/mnistlogger.log')])
 model.save('models/mnist2.h5')
 
