@@ -5,12 +5,17 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from utils.metrics import f1_score, precision, recall
+from utils.logger1 import TestingCallback, NTestBatchCSVLogger
+
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--dataset', default='\\wsl$\\Ubuntu\\home\\shaheera\\mnist-fc\\dataset\\MNIST\\mnist.npz', help="MNIST dataset")
+parser.add_argument('--dataset', default='dataset/MNIST/mnist.npz', help="MNIST dataset")
 parser.add_argument('--model', default = 'models/mnist1.h5', type = str, action = 'store', help="MNIST model")
 parser.add_argument('--output', default = 'outputs/', type = str, action = 'store', help="Output Path")
 args = parser.parse_args()
+
+mylogger = TestingCallback()
+CSV_test_batch_logger = NTestBatchCSVLogger("logs/batch_test_logs.csv", separator=',', append=False)
 
 (X_train, y_train), (X_test, y_test) = mnist.load_data(args.dataset)
 
@@ -22,7 +27,7 @@ X_test /= 255
 nb_classes = 10 # number of unique digits
 Y_test = np_utils.to_categorical(y_test, nb_classes)
 
-score = model1.evaluate(X_test, Y_test)
+score = model1.evaluate(X_test, Y_test, callbacks = [TestingCallback(), CSV_test_batch_logger])
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
 

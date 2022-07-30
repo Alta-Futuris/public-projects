@@ -9,11 +9,11 @@ from utils.metrics import f1_score, precision, recall
 from mnist import MNIST
 import argparse
 from keras.models import model_from_json
-from logger1 import MyLogger
+from utils.logger1 import MyLogger, NBatchCSVLogger, NEpochCSVLogger
 
 # Arguments for the training
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--dataset', default='\\wsl$\\Ubuntu\\home\\shaheera\\mnist-fc\\dataset\\MNIST\\mnist.npz', help="MNIST dataset")
+parser.add_argument('--dataset', default='dataset/MNIST/mnist.npz', help="MNIST dataset")
 parser.add_argument('--config', default = 'base_config.json', type = str, action = 'store', help="Configuration file")
 args = parser.parse_args()
 
@@ -50,11 +50,25 @@ json_file = open(filename,'r')
 loaded_model_json = json_file.read()
 json_file.close()
 model = model_from_json(loaded_model_json)
-model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy', f1_score, precision, recall])
+model.compile(loss='categorical_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy', f1_score, precision, recall])
 
 #model = FC_model()
 
 mylogger = MyLogger(n=epochs)
-history = model.fit(X_train, Y_train, batch_size=batch_size, epochs=epochs, verbose=1, callbacks = [mylogger, keras.callbacks.CSVLogger('logs/mnistlogger.log')])
+CSV_batch_logger = NBatchCSVLogger("logs/batch_train_logs.csv", separator=',', append=False)
+CSV_epoch_logger = NEpochCSVLogger("logs/epoch_train_logs.csv", separator=',', append=False)
+
+
+#history = model.fit(X_train, Y_train, batch_size=batch_size,
+#                    epochs=epochs, validation_split = 0.20,
+#                    verbose=0,
+#                    callbacks = [mylogger, keras.callbacks.CSVLogger('mnist.csv')])
+history = model.fit(X_train, Y_train, batch_size=batch_size,
+                    epochs=epochs, validation_split = 0.20,
+                    verbose=0,
+                    callbacks = [mylogger, CSV_batch_logger, CSV_epoch_logger, CSV_test_batch_logger])
+
 model.save('models/mnist2.h5')
 
