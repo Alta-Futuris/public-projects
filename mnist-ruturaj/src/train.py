@@ -57,9 +57,12 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
         model.train()
         for image, labels in train_loader:
             # print(image.shape)
-            pred = model(image)
+            try:
+                pred = model(image)
+            except:
+                print('Shape of the input to model must be of [No.of inputs of first layer, height of image, width of the image')
             # loss calculation
-            loss = loss_fn(pred, labels) # Passing pred of shape (batchsize, no.of classes) and labels of shape(btachsize)
+            loss = loss_fn(pred, labels) # Passing pred of shape (batchsize, no.of classes) and labels of shape(batchsize)
             # Gradient calculation
             loss.backward()
             # Weight adjusting
@@ -94,27 +97,41 @@ def fit(epochs, lr, train_loader, val_loader, loss_fn, opt):
 
     return dl,da
 
-
+    
 if __name__ == "__main__":
 
-    parser = ModelParser("../base_config.json")
+
+    try:
+        parser = ModelParser("../base_config.json")
+    except:
+        print('Couldn\'t import the configartion module')
+
     layers = parser.get_list()
     kwargs = parser.get_hp()[0]
     model = MnistModel(layers)
     model = model.build_model()
- 
+    
+    try:
+        assert isinstance(model[0].weight, torch.nn.parameter.Parameter), 'Model isnot initialized'
+       
+    except AssertionError as msg :
+        print(msg)
+
     Hyperparameters(**kwargs)
 
     # Assigning hyperparametres
-    batch_size = Hyperparameters.batch_size
-    epochs = Hyperparameters.epochs
-    lr = Hyperparameters.lr
-    opt = Hyperparameters.opt
-    if opt == "Adam":
-        optm = torch.optim.Adam(model.parameters(), lr)
-    elif opt == "SGD":
-        optm = torch.optim.SGD(model.parameters(), lr)
-    loss_fn = Hyperparameters.loss_fn
+    try:
+        batch_size = Hyperparameters.batch_size
+        epochs = Hyperparameters.epochs
+        lr = Hyperparameters.lr
+        opt = Hyperparameters.opt
+        if opt == "Adam":
+            optm = torch.optim.Adam(model.parameters(), lr)
+        elif opt == "SGD":
+            optm = torch.optim.SGD(model.parameters(), lr)
+        loss_fn = Hyperparameters.loss_fn
+    except:
+        print('Error in defining the hyperparameters')
 
     # Preprocessing
     train_loader,val_loader=preprocess(batch_size)
@@ -135,14 +152,15 @@ if __name__ == "__main__":
     # with mlflow.start_run():
     #     state_dict = model.state_dict()
     #     mlflow.pytorch.log_state_dict(state_dict, artifact_path="model")
-    
+
     run.stop()
 
+    try:
+        torch.save({'model_state': model.state_dict(), 'epochs':epochs, 
+        'Learning_rate':lr, 'Loss_fn':loss_fn, 'optmizer_state':optm.state_dict() }, '../Models/MNIST_{0}_{1}_{2}_{3}_{4}.pth'.format(batch_size,epochs,lr,opt,loss_fn))
 
-    torch.save({'model_state': model.state_dict(), 'epochs':epochs, 
-    'Learning_rate':lr, 'Loss_fn':loss_fn, 'optmizer_state':optm.state_dict() }, '../Models/MNIST_{0}_{1}_{2}_{3}_{4}.pth'.format(batch_size,epochs,lr,opt,loss_fn))
-
-
+    except:
+        print('Path of model saving isnot correct')
 
     
  
