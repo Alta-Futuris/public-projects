@@ -19,7 +19,7 @@ def test_data_type_normalize_positive():
         expected_type_image, expected_type_image_normalize, result, result_normalize = data_type_normalize('float32', 255)      
         assert np.array_equal(expected_type_image, result)
         assert np.array_equal(expected_type_image_normalize, result_normalize)
-        
+#Negative case is not needed    
 #Component 2 - Exception case
 @pytest.mark.parametrize("value", [150, 300, 1])
 def test_data_type_normalize_exception(value):
